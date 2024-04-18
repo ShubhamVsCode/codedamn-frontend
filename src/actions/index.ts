@@ -7,6 +7,8 @@ const API_URL = {
   NEW_FILE: `/file/new`,
   UPDATE_FILE: `/file/update`,
   DELETE_FILE: `/file/delete`,
+  LOGIN: `/user`,
+  START_SANDBOX: `/sandbox/start`,
 };
 
 interface APIResponse {
@@ -25,6 +27,17 @@ interface FileResponse extends APIResponse {
 interface FileResponse extends APIResponse {
   data?: IFile;
 }
+
+interface UserResponse extends APIResponse {
+  data?: IUser;
+}
+
+interface SandboxResponse extends APIResponse {
+  data?: {
+    port: string;
+  };
+}
+
 export const getAllFiles = async () => {
   try {
     const { data: response }: { data: GetAllResponse } =
@@ -87,5 +100,38 @@ export const updateFile = async (
   } catch (error) {
     console.log(error);
     return false;
+  }
+};
+
+export const login = async (email: string) => {
+  try {
+    const { data: response }: { data: UserResponse } = await axiosInstance.post(
+      API_URL.LOGIN,
+      { email },
+    );
+    if (!response.success) {
+      return null;
+    }
+    console.log(response);
+
+    return response?.data;
+  } catch (error) {
+    console.log(error);
+    return null;
+  }
+};
+
+export const startSandbox = async (email: string) => {
+  try {
+    const { data: response }: { data: SandboxResponse } =
+      await axiosInstance.get(API_URL.START_SANDBOX);
+
+    if (!response.success) {
+      return null;
+    }
+    return response?.data;
+  } catch (error) {
+    console.log(error);
+    return null;
   }
 };

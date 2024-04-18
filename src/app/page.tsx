@@ -1,34 +1,42 @@
-import CodeEditor from "@/components/CodeEditor";
-import Sidebar from "@/components/Sidebar";
-import Tabs from "@/components/Tabs";
-import TerminalComponent from "@/components/Terminal";
-import {
-  ResizableHandle,
-  ResizablePanel,
-  ResizablePanelGroup,
-} from "@/components/ui/resizable";
+"use client";
 
-export default function Home() {
+import { login, startSandbox } from "@/actions";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { useRouter } from "next/navigation";
+import React from "react";
+import { toast } from "sonner";
+
+const Home = () => {
+  const router = useRouter();
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!e.currentTarget.email.value) {
+      return toast.error("Email is required");
+    }
+    const user = await login(e.currentTarget.email.value as string);
+
+    if (!user) {
+      return toast.error("Login failed");
+    }
+
+    router.push("/code");
+    toast.success("Login success");
+    const sandbox = await startSandbox(user.email);
+  };
+
   return (
-    <main className="w-screen h-screen">
-      <ResizablePanelGroup direction="horizontal">
-        <ResizablePanel defaultSize={10}>
-          <Sidebar />
-        </ResizablePanel>
-        <ResizableHandle />
-        <ResizablePanel defaultSize={50}>
-          <ResizablePanelGroup direction="vertical">
-            <ResizablePanel defaultSize={65}>
-              <Tabs />
-              <CodeEditor />
-            </ResizablePanel>
-            <ResizableHandle />
-            <ResizablePanel maxSize={60} defaultSize={35}>
-              <TerminalComponent />
-            </ResizablePanel>
-          </ResizablePanelGroup>
-        </ResizablePanel>
-      </ResizablePanelGroup>
-    </main>
+    <div className="flex h-screen items-center justify-center">
+      <form className="w-[300px] space-y-2" onSubmit={handleSubmit}>
+        <label htmlFor="email">Email</label>
+        <Input required id="email" type="email" placeholder="you@example.com" />
+        <Button className="w-full" type="submit">
+          Start Coding
+        </Button>
+      </form>
+    </div>
   );
-}
+};
+
+export default Home;

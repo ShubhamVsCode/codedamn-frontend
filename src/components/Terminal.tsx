@@ -3,11 +3,14 @@ import { useEffect, useRef } from "react";
 import { Terminal } from "@xterm/xterm";
 import { FitAddon } from "@xterm/addon-fit";
 import "@xterm/xterm/css/xterm.css";
+import { io } from "socket.io-client";
 
 const TerminalComponent = () => {
   const terminalRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    const socket = io("http://localhost:4000");
+
     const term = new Terminal({
       convertEol: true,
       theme: {
@@ -22,12 +25,15 @@ const TerminalComponent = () => {
 
     fitAddon.fit();
 
-    term.write("Welcome to the terminal!\r\n");
+    // term.write("Welcome to the terminal!\r\n");
 
     term.onKey((e) => {
       const { key, domEvent } = e;
       const printable =
         !domEvent.altKey && !domEvent.ctrlKey && !domEvent.metaKey;
+
+      socket.emit("command", key);
+
       if (domEvent.key === "Enter") {
         term.write("\r\n");
       } else if (domEvent.key === "Backspace") {
@@ -46,6 +52,10 @@ const TerminalComponent = () => {
       term.write(data);
     };
 
+    socket.on("output", (data) => {
+      handleTerminalData(data);
+    });
+
     // terminalData.on("data", handleTerminalData);
 
     return () => {
@@ -54,7 +64,16 @@ const TerminalComponent = () => {
     };
   }, []);
 
-  return <div ref={terminalRef} style={{ width: "100%", height: "500px" }} />;
+  // useEffect(() => {
+  //   const socket = io("http://localhost:4000");
+
+  //   socket.on("command-output", (data) => {
+  //     const { output } = data;
+  //     terminalRef.current;
+  //   });
+  // }, []);
+
+  return <div ref={terminalRef} style={{ width: "100%", height: "100%" }} />;
 };
 
 export default TerminalComponent;
