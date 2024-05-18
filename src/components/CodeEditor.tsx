@@ -1,6 +1,7 @@
 "use client";
-import { updateFile } from "@/actions";
-import { useFilesStore } from "@/store/files";
+import { useSocket } from "@/hooks/socket";
+import { SOCKET_URL } from "@/lib/axios";
+import { useSandboxStore } from "@/store/sandbox";
 import { useTabsStore } from "@/store/tabs";
 import Editor from "@monaco-editor/react";
 import { useRef } from "react";
@@ -22,48 +23,46 @@ const extensionToLanguage: Record<string, string> = {
 };
 
 const CodeEditor = () => {
-  const { selectedTab, updateContent } = useTabsStore();
-  const tab = selectedTab();
+  const { tabs, selectedTabId, updateContent } = useTabsStore();
+  const socket = useSocket();
   const timer = useRef<NodeJS.Timeout | null>(null);
+
+  const tab = tabs.find((tab) => tab._id === selectedTabId);
 
   const handleUpdateChanges = (content?: string) => {
     if (content) updateContent(content);
-    if (tab) saveChanges(tab);
+    if (tab && content) saveChanges(content);
   };
 
-  const saveChanges = async (file: IFile) => {
+  const saveChanges = async (fileContent: string) => {
     if (timer.current) clearTimeout(timer.current);
 
     timer.current = setTimeout(async () => {
-      if (!file) return;
+      if (!fileContent) return;
+
+      socket?.emit("updateContent", {
+        fileName: tab?._id,
+        fileContent: fileContent,
+      });
+      console.log("Update Content");
 
       timer.current = null;
-
-      if (!file.isSaved) {
-        const saved = await updateFile(
-          file._id,
-          file.name,
-          file.content,
-          file.extension,
-        );
-      }
     }, 1000);
   };
 
   return (
     <div className="w-full h-full">
-      <Editor
-        key={tab?._id}
-        height="100%"
-        // defaultLanguage="javascript"
-        defaultValue=""
-        theme="vs-dark"
-        language={
-          extensionToLanguage[selectedTab()?.extension || "js"] || "javascript"
-        }
-        onChange={handleUpdateChanges}
-        value={tab?.content ?? ""}
-      />
+      {tab?._id && (
+        <Editor
+          key={tab?._id}
+          height="100%"
+          defaultValue=""
+          theme="vs-dark"
+          language={extensionToLanguage[tab?.extension || "js"] || "javascript"}
+          onChange={handleUpdateChanges}
+          value={tab?.content ?? ""}
+        />
+      )}
     </div>
   );
 };

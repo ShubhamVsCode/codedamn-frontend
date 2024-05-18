@@ -1,5 +1,3 @@
-"use server";
-
 import axiosInstance from "@/lib/axios";
 
 const API_URL = {
@@ -34,7 +32,7 @@ interface UserResponse extends APIResponse {
 
 interface SandboxResponse extends APIResponse {
   data?: {
-    port: string;
+    url: string;
   };
 }
 
@@ -112,7 +110,7 @@ export const login = async (email: string) => {
     if (!response.success) {
       return null;
     }
-    console.log(response);
+    console.log(response.data);
 
     return response?.data;
   } catch (error) {
@@ -124,7 +122,7 @@ export const login = async (email: string) => {
 export const startSandbox = async (email: string) => {
   try {
     const { data: response }: { data: SandboxResponse } =
-      await axiosInstance.get(API_URL.START_SANDBOX);
+      await axiosInstance.post(API_URL.START_SANDBOX, { email });
 
     if (!response.success) {
       return null;

@@ -1,14 +1,16 @@
 "use client";
 
+import React from "react";
 import { login, startSandbox } from "@/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
-import React from "react";
 import { toast } from "sonner";
+import { useSandboxStore } from "@/store/sandbox";
 
 const Home = () => {
   const router = useRouter();
+  const { setSandboxUrl } = useSandboxStore();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -23,7 +25,11 @@ const Home = () => {
 
     router.push("/code");
     toast.success("Login success");
+    localStorage.setItem("userId", user._id);
     const sandbox = await startSandbox(user.email);
+    if (sandbox?.url) {
+      setSandboxUrl(sandbox.url);
+    }
   };
 
   return (
