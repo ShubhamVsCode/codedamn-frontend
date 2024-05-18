@@ -1,7 +1,11 @@
 import CodeEditor from "@/components/CodeEditor";
 import Sidebar from "@/components/Sidebar";
 import Tabs from "@/components/Tabs";
-import TerminalComponent from "@/components/Terminal";
+// import TerminalComponent from "@/components/Terminal";
+import dynamic from "next/dynamic";
+const TerminalComponent = dynamic(() => import("@/components/Terminal"), {
+  ssr: false,
+});
 import {
   ResizableHandle,
   ResizablePanel,

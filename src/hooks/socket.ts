@@ -10,7 +10,7 @@ export const useSocket = (onConnection?: (socket: Socket) => void) => {
     if (!socketInstance) {
       socketInstance = io(sandboxUrl, {
         autoConnect: false,
-        query: { userId: localStorage.getItem("userId") || "" },
+        // query: { userId: localStorage.getItem("userId") || "" },
       });
 
       socketInstance.on("connect", () => {
