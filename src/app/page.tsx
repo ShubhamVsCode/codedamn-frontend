@@ -7,10 +7,12 @@ import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useSandboxStore } from "@/store/sandbox";
+import { useUserStore } from "@/store/user";
 
 const Home = () => {
   const router = useRouter();
   const { setSandboxUrl } = useSandboxStore();
+  const { setUserId } = useUserStore();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -23,13 +25,18 @@ const Home = () => {
       return toast.error("Login failed");
     }
 
-    router.push("/code");
     toast.success("Login success");
     localStorage.setItem("userId", user._id);
+    setUserId(user._id);
+
     const sandbox = await startSandbox(user.email);
     if (sandbox?.url) {
       setSandboxUrl(sandbox.url);
+      localStorage.setItem("sandboxUrl", sandbox.url);
     }
+
+    toast.success("Sandbox started");
+    router.push("/code");
   };
 
   return (

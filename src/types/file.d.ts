@@ -1,7 +1,8 @@
 interface IFile {
-  _id: string;
   name: string;
   content: string;
-  extension: string;
-  isSaved?: boolean;
+  isDir: boolean;
+  children?: IFile[];
 }
+
+type IFileStructure = IFile[];

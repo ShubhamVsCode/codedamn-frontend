@@ -1,27 +1,40 @@
 import { useSandboxStore } from "@/store/sandbox";
-import { useState } from "react";
+import { useUserStore } from "@/store/user";
+import { useEffect, useState } from "react";
 import { io, Socket } from "socket.io-client";
 
 let socketInstance: Socket | null = null;
 
 export const useSocket = (onConnection?: (socket: Socket) => void) => {
   const { sandboxUrl } = useSandboxStore();
-  const [socket, setSocket] = useState<Socket | null>(() => {
-    if (!socketInstance) {
-      socketInstance = io(sandboxUrl, {
-        autoConnect: false,
-        // query: { userId: localStorage.getItem("userId") || "" },
-      });
+  const { userId } = useUserStore();
+  const [socket, setSocket] = useState<Socket | null>();
 
-      socketInstance.on("connect", () => {
-        socketInstance && onConnection?.(socketInstance);
-      });
+  useEffect(() => {
+    if (!socket) {
+      const connectToSandbox = () => {
+        if (!socketInstance && sandboxUrl) {
+          socketInstance = io(sandboxUrl, {
+            transports: ["websocket"],
+            autoConnect: false,
+            query: { userId: userId || "" },
+            perMessageDeflate: {
+              threshold: 0,
+            },
+          });
 
-      socketInstance.connect();
+          socketInstance.on("connect", () => {
+            onConnection?.(socketInstance!);
+          });
+
+          socketInstance.connect();
+        }
+
+        return socketInstance;
+      };
+      setSocket(connectToSandbox());
     }
-
-    return socketInstance;
-  });
+  }, [socket, onConnection, sandboxUrl, userId]);
 
   return socket;
 };

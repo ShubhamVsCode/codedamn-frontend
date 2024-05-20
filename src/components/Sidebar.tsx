@@ -1,39 +1,34 @@
 "use client";
 
 import React, { FormEvent, useEffect, useRef, useState } from "react";
-import cuid from "cuid";
 import { useFilesStore } from "@/store/files";
 import { useTabsStore } from "@/store/tabs";
-
-import { cn } from "@/lib/utils";
-import { Input } from "@/components/ui/input";
+import { useSandboxStore } from "@/store/sandbox";
+import { useUserStore } from "@/store/user";
 import { useSocket } from "@/hooks/socket";
 
+import { ScrollArea } from "./ui/scroll-area";
+import FileStructure from "./FileStructure";
+
 const Sidebar = () => {
-  const { files, addFile, setFiles } = useFilesStore();
+  const { files, setFiles } = useFilesStore();
   const { tabs, openTab, selectedTabId } = useTabsStore();
+  const { sandboxUrl, setSandboxUrl } = useSandboxStore();
+  const { userId, setUserId } = useUserStore();
 
   const [file, setFile] = useState<IFile | null>(null);
   const [showInput, setShowInput] = useState<boolean>(false);
-
   const inputRef = useRef<HTMLInputElement | null>(null);
-  const socket = useSocket();
+  const socket = useSocket((socket) => {
+    console.log("Socket connected to sandbox, fetchFileStructure");
+    socket.on("fileStructure", (fileStructure: IFile[]) =>
+      setFiles(fileStructure),
+    );
+  });
   const createFile = () => {
     if (!showInput) {
       setShowInput(true);
     }
-
-    // FIXME: input was not focused until it is shown
-    // setTimeout(() => inputRef.current?.focus(), 0);
-
-    const newFile: IFile = {
-      _id: cuid(),
-      name: "",
-      content: "",
-      extension: "",
-      isSaved: false,
-    };
-    setFile(newFile);
   };
 
   const handleFileNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -42,8 +37,7 @@ const Sidebar = () => {
     setFile({
       ...file,
       name: e.target.value,
-      _id: file._id ?? cuid(),
-      isSaved: false,
+      // _id: file._id ?? cuid(),
     });
   };
 
@@ -76,29 +70,29 @@ const Sidebar = () => {
     // setShowInput(false);
   };
 
-  useEffect(() => {
-    socket?.on("newFileCreated", (file: string) => {
-      addFile({ _id: file, name: file, content: "", extension: "js" });
-      setFile(null);
-      setShowInput(false);
-    });
+  // useEffect(() => {
+  //   socket?.on("newFileCreated", (file: string) => {
+  //     // addFile({ _id: file, name: file, content: "", extension: "js" });
+  //     setFile(null);
+  //     setShowInput(false);
+  //   });
 
-    socket?.on("allFiles", (filesName: string[]) => {
-      const files = filesName.map((name) => ({
-        _id: name,
-        name,
-        content: "",
-        extension: "js",
-      }));
+  //   socket?.on("allFiles", (filesName: string[]) => {
+  //     const files = filesName.map((name) => ({
+  //       _id: name,
+  //       name,
+  //       content: "",
+  //       extension: "js",
+  //     }));
 
-      setFiles(files);
-    });
+  //     // setFiles(files);
+  //   });
 
-    return () => {
-      socket?.off("newFileCreated");
-      socket?.off("allFiles");
-    };
-  }, [addFile, setFiles, socket]);
+  //   return () => {
+  //     socket?.off("newFileCreated");
+  //     socket?.off("allFiles");
+  //   };
+  // }, [setFiles, socket]);
 
   const handleFileClick = (fileId: string) => {
     socket?.emit("getFileContent", fileId);
@@ -120,54 +114,47 @@ const Sidebar = () => {
         //   content: fileContent,
         //   extension: "js",
         // });
-        openTab({
-          _id: fileName,
-          name: fileName,
-          content: fileContent,
-          extension: "js",
-        });
+        // openTab({
+        //   name: fileName,
+        //   content: fileContent,
+        // });
       },
     );
-  }, [addFile, openTab, socket]);
+  }, [openTab, socket]);
+
+  useEffect(() => {
+    const fetchFileStructure = () => {
+      socket?.emit("getFileStructure");
+    };
+    socket?.on("fileStructure", (fileStructure: IFile[]) =>
+      setFiles(fileStructure),
+    );
+    socket?.on("newFileCreated", fetchFileStructure);
+    socket?.on("fileChanged", fetchFileStructure);
+
+    setTimeout(fetchFileStructure, 1000);
+
+    return () => {
+      socket?.off("fileStructure");
+      socket?.off("newFileCreated");
+      socket?.off("fileChanged");
+    };
+  }, [socket, setFiles]);
+
+  useEffect(() => {
+    const sandboxUrl = localStorage.getItem("sandboxUrl");
+    const userId = localStorage.getItem("userId");
+    if (sandboxUrl) {
+      setSandboxUrl(sandboxUrl);
+      setUserId(userId ?? "");
+    }
+  }, [setSandboxUrl, setUserId]);
 
   return (
-    <div className="h-full w-full bg-gray-200 dark:bg-gray-900">
-      <div className="flex h-full flex-col">
-        <div className="flex flex-1 flex-col">
-          <div className="flex flex-1 flex-col">
-            <div
-              className="cursor-pointer rounded-md p-2 hover:bg-gray-300 dark:hover:bg-gray-700"
-              onClick={() => createFile()}
-            >
-              Add File
-            </div>
-            {files.map((file) => (
-              <div
-                key={file._id}
-                className={cn(
-                  "cursor-pointer rounded-md p-2 hover:bg-gray-300 dark:hover:bg-gray-700",
-                  selectedTabId === file._id && "bg-gray-300 dark:bg-gray-700",
-                )}
-                onClick={() => handleFileClick(file._id)}
-              >
-                {file.name}
-              </div>
-            ))}
-
-            {showInput && (
-              <form onSubmit={handleFileCreate}>
-                <Input
-                  ref={inputRef}
-                  value={file?.name}
-                  onChange={handleFileNameChange}
-                  type="text"
-                  placeholder="Enter file name"
-                />
-              </form>
-            )}
-          </div>
-        </div>
-      </div>
+    <div className="h-full w-full bg-gray-200 dark:bg-zinc-900">
+      <ScrollArea className="h-full">
+        <FileStructure fileStructure={files} currentPath="" />
+      </ScrollArea>
     </div>
   );
 };

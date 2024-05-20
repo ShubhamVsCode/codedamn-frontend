@@ -110,7 +110,6 @@ export const login = async (email: string) => {
     if (!response.success) {
       return null;
     }
-    console.log(response.data);
 
     return response?.data;
   } catch (error) {
@@ -121,13 +120,14 @@ export const login = async (email: string) => {
 
 export const startSandbox = async (email: string) => {
   try {
-    const { data: response }: { data: SandboxResponse } =
-      await axiosInstance.post(API_URL.START_SANDBOX, { email });
+    const { data: response } = await axiosInstance.post(API_URL.START_SANDBOX, {
+      email,
+    });
 
     if (!response.success) {
       return null;
     }
-    return response?.data;
+    return response;
   } catch (error) {
     console.log(error);
     return null;
