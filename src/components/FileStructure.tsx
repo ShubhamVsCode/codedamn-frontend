@@ -9,6 +9,7 @@ import { FilePlusIcon } from "@radix-ui/react-icons";
 import { Input } from "./ui/input";
 import { useSocket } from "@/hooks/socket";
 import { FileIcon, FolderIcon, FolderPlusIcon } from "lucide-react";
+import { useTabsStore } from "@/store/tabs";
 
 const FileStructure = ({
   fileStructure,
@@ -22,6 +23,7 @@ const FileStructure = ({
   const [isDir, setIsDir] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const socket = useSocket();
+  const { addTab, setActiveTab } = useTabsStore();
 
   const handleAddFile = () => {
     if (fileName) {
@@ -34,6 +36,11 @@ const FileStructure = ({
     } else {
       setShowInput(false);
     }
+  };
+
+  const handleOpenFile = (path: string, name: string) => {
+    addTab({ path, name });
+    setActiveTab(path);
   };
 
   useEffect(() => {
@@ -81,13 +88,16 @@ const FileStructure = ({
           return item.isDir ? (
             <Folder key={item.name} item={item} parentPath={currentPath} />
           ) : (
-            <div
+            <button
               key={item.name}
               className="flex items-center gap-2 hover:bg-gray-800 p-1 w-full rounded-md"
+              onClick={() =>
+                handleOpenFile(`${currentPath}/${item.name}`, item.name)
+              }
             >
               <FileIcon className="w-5 h-5 text-purple-500" />
               <span className="font-medium">{item.name}</span>
-            </div>
+            </button>
           );
         })}
       {showInput && (

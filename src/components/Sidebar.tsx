@@ -12,19 +12,12 @@ import FileStructure from "./FileStructure";
 
 const Sidebar = () => {
   const { files, setFiles } = useFilesStore();
-  const { tabs, openTab, selectedTabId } = useTabsStore();
-  const { sandboxUrl, setSandboxUrl } = useSandboxStore();
-  const { userId, setUserId } = useUserStore();
+  const { setSandboxUrl } = useSandboxStore();
+  const { setUserId } = useUserStore();
 
   const [file, setFile] = useState<IFile | null>(null);
   const [showInput, setShowInput] = useState<boolean>(false);
-  const inputRef = useRef<HTMLInputElement | null>(null);
-  const socket = useSocket((socket) => {
-    console.log("Socket connected to sandbox, fetchFileStructure");
-    socket.on("fileStructure", (fileStructure: IFile[]) =>
-      setFiles(fileStructure),
-    );
-  });
+  const socket = useSocket();
   const createFile = () => {
     if (!showInput) {
       setShowInput(true);
@@ -120,7 +113,7 @@ const Sidebar = () => {
         // });
       },
     );
-  }, [openTab, socket]);
+  }, [socket]);
 
   useEffect(() => {
     const fetchFileStructure = () => {

@@ -5,7 +5,7 @@ import { Cross1Icon } from "@radix-ui/react-icons";
 import { cn } from "@/lib/utils";
 
 const Tabs = () => {
-  const { tabs, closeTab, selectedTabId, changeSelectedTab } = useTabsStore();
+  const { tabs, activeTab, addTab, removeTab, setActiveTab } = useTabsStore();
 
   return (
     <div className="h-12 bg-black flex">
@@ -13,18 +13,18 @@ const Tabs = () => {
         <div
           className={cn(
             "w-fit bg-slate-900 border-r px-3 flex items-center justify-center gap-2 cursor-pointer",
-            selectedTabId === tab._id && "bg-slate-800",
+            activeTab === tab.path && "bg-slate-800",
           )}
-          key={tab._id}
+          key={tab.path}
           onClick={() => {
-            changeSelectedTab(tab._id);
+            setActiveTab(tab.path);
           }}
         >
           <span>{tab.name}</span>
           <button
             onClick={(e) => {
               e.stopPropagation();
-              closeTab(tab._id);
+              removeTab(tab.path);
             }}
           >
             <Cross1Icon className="size-3" />
