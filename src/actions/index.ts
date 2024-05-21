@@ -71,7 +71,7 @@ export const createNewFile = async (
       return false;
     }
 
-    return response?.data?._id;
+    return response?.data;
   } catch (error) {
     console.log(error);
     return false;
