@@ -9,6 +9,7 @@ import { useSocket } from "@/hooks/socket";
 
 import { ScrollArea } from "./ui/scroll-area";
 import FileStructure from "./FileStructure";
+import { useRouter } from "next/navigation";
 
 const Sidebar = () => {
   const { files, setFiles } = useFilesStore();
@@ -18,6 +19,9 @@ const Sidebar = () => {
   const [file, setFile] = useState<IFile | null>(null);
   const [showInput, setShowInput] = useState<boolean>(false);
   const socket = useSocket();
+
+  const router = useRouter();
+
   const createFile = () => {
     if (!showInput) {
       setShowInput(true);
@@ -140,8 +144,10 @@ const Sidebar = () => {
     if (sandboxUrl) {
       setSandboxUrl(sandboxUrl);
       setUserId(userId ?? "");
+    } else {
+      router.push("/");
     }
-  }, [setSandboxUrl, setUserId]);
+  }, [setSandboxUrl, setUserId, router]);
 
   return (
     <div className="h-full w-full bg-gray-200 dark:bg-zinc-900">
