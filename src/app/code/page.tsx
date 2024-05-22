@@ -11,6 +11,7 @@ import {
   ResizablePanel,
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
+import PreviewButton from "@/components/Preview";
 
 const CodePage = () => {
   return (
@@ -31,6 +32,10 @@ const CodePage = () => {
               <TerminalComponent />
             </ResizablePanel>
           </ResizablePanelGroup>
+        </ResizablePanel>
+        <ResizableHandle />
+        <ResizablePanel defaultSize={10}>
+          <PreviewButton />
         </ResizablePanel>
       </ResizablePanelGroup>
     </main>

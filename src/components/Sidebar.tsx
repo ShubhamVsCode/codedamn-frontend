@@ -145,7 +145,7 @@ const Sidebar = () => {
       setSandboxUrl(sandboxUrl);
       setUserId(userId ?? "");
     } else {
-      router.push("/");
+      // router.push("/");
     }
   }, [setSandboxUrl, setUserId, router]);
 
